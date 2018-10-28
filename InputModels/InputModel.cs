@@ -18,7 +18,11 @@ namespace HowLeaky.DataModels
         public string FileName { get; set; }
         [XmlAttribute("text")]
         public string Text { get; set; }
+        [XmlAttribute("Description")]
         public string Description { get; set; }
+        [XmlAttribute("Comments")]
+        public string InputModelComments { get; set; }
+
         [XmlIgnore]
         public Dictionary<string, object> Overrides { get; set; }
         public string LongName { get; set; }

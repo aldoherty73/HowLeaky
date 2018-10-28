@@ -65,7 +65,7 @@ namespace HowLeaky.DataModels
     public class SoilInputModel : InputModel
     {
 
-        [Input("HorizonCount")]
+        [Input("Horizon Count", null, "The number of horizons in the soil")]
         public int HorizonCount { get; set; }
         [XmlElement("LayerDepth")]
         [Input("Depths")]

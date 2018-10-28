@@ -116,8 +116,16 @@ namespace HowLeaky.ModelControllers
             }
             foreach (OutputDataElement ode in Outputs)
             {
-                OutputDataElement projODE = Sim.Project.OutputDataElements.Where(x => x.Name == ode.Name && x.HLController.Name == ode.HLController.Name).FirstOrDefault();
-                ode.IsSelected = projODE.IsSelected;
+                // OutputDataElement projODE = Sim.Project.OutputDataElements.Where(x => x.Name == ode.Name && x.HLController.Name == ode.HLController.Name).FirstOrDefault();
+                OutputDataElement projODE = Sim.Project.OutputDataElements.Where(x => x.Name == ode.Name).FirstOrDefault();
+                if (projODE != null)
+                {
+                    ode.IsSelected = projODE.IsSelected;
+                }
+                else
+                {
+                    ode.IsSelected = false;
+                }
             }
         }
         /// <summary>
@@ -300,6 +308,38 @@ namespace HowLeaky.ModelControllers
         /// </summary>
         /// <param name="Project"></param>
         /// <returns></returns>
+        public static List<OutputDataElement> GetProjectOutputs(List<HLController> controllers)
+        {
+            List<OutputDataElement> Outputs = new List<OutputDataElement>();
+
+            foreach(HLController c in controllers)
+            {
+                if (c != null)
+                {
+                    if (c.GetType().BaseType == typeof(HLObjectController))
+                    {
+                        HLObjectController hlo = (HLObjectController)c;
+                        
+                        foreach(HLController child in hlo.ChildControllers)
+                        {
+                            AddOutputElements(Outputs, child, true);
+                        }
+                    }
+                    else
+                    {
+                        AddOutputElements(Outputs, c, false);
+                    }
+                }
+            }
+            
+            return Outputs;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="Project"></param>
+        /// <returns></returns>
         public static List<OutputDataElement> GetProjectOutputs(Project Project)
         {
             List<OutputDataElement> Outputs = new List<OutputDataElement>();
@@ -335,7 +375,8 @@ namespace HowLeaky.ModelControllers
             AddOutputOutputElements(Outputs, typeof(TillageController), Project.Simulations, false);
             //Pesticides is handled differently
             //Always use the suffix for Pesticides
-            AddOutputOutputElements(Outputs, typeof(PesticideController), Project.Simulations, true);
+            //AddOutputOutputElements(Outputs, typeof(PesticideController), Project.Simulations, true);
+            AddOutputOutputElements(Outputs, typeof(PesticideController), Project.Simulations, false);
 
             return Outputs;
         }
@@ -402,8 +443,14 @@ namespace HowLeaky.ModelControllers
             {
                 return;
             }
-
-            Outputs.AddRange(controller.Sim.OutputModelController.GetOutputs(controller.Output, useSuffix));
+            if (controller.Sim != null)
+            {
+                Outputs.AddRange(controller.Sim.OutputModelController.GetOutputs(controller.Output, useSuffix));
+            }
+            else
+            {
+                Outputs.AddRange(new OutputModelController().GetOutputs(controller.Output, useSuffix));
+            }
         }
     }
 }

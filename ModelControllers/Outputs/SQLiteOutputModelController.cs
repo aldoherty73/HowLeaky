@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace HowLeaky.ModelControllers.Outputs
@@ -64,11 +65,11 @@ namespace HowLeaky.ModelControllers.Outputs
         {
             base.PrepareVariableNamesForOutput();
 
-            List<string> OutputNames = new List<string>(Outputs.Where(j=>j.IsSelected).Select(x => x.Name));
+            List<string> OutputNames = new List<string>(Outputs.Where(j => j.IsSelected).Select(x => x.Name));
 
-         //   List<string> OutputIndicies = new List<string>();
+            //   List<string> OutputIndicies = new List<string>();
 
-        //    List<string> ProjectOutputNames = new List<string>(Sim.Project.OutputDataElements.Select(x => x.Name));
+            //    List<string> ProjectOutputNames = new List<string>(Sim.Project.OutputDataElements.Select(x => x.Name));
 
 
             //for (int i = 0; i < OutputNames.Count; i++)
@@ -88,7 +89,7 @@ namespace HowLeaky.ModelControllers.Outputs
 
             InsertString = "INSERT INTO [TABLE] ([INDICIES]," + String.Join(",", OutputNames) + ") VALUES ";
 
-        //    InsertString = "INSERT INTO [TABLE] ([INDICIES]," + String.Join(",", OutputIndicies) + ") VALUES ";
+            //    InsertString = "INSERT INTO [TABLE] ([INDICIES]," + String.Join(",", OutputIndicies) + ") VALUES ";
         }
         /// <summary>
         /// 
@@ -98,40 +99,48 @@ namespace HowLeaky.ModelControllers.Outputs
             //DBContext.SaveChanges();
             //Add Daily data
             StringBuilder iString = new StringBuilder();
+            //iString.AppendLine("BEGIN;");
+
             iString.Append(InsertString.Replace("[TABLE]", "DATA").Replace("[INDICIES]", "SimId,Day"));
 
             for (int i = 0; i < Values.Count; i++)
             {
-                iString.Append((i == 0 ? "" : ",") + "(" + String.Join(",", Values[i]) + ")");
+                iString.Append((i == 0 ? "" : ",") + "(" + String.Join(",", Values[i].Select(v => Math.Round(v, 5))) + ")");
             }
 
-            SQLiteCommand command = new SQLiteCommand(iString.ToString(), SQLConn);
-            command.ExecuteNonQuery();
+            iString.Append(";");
+
+            //SQLiteCommand command = new SQLiteCommand(iString.ToString(), SQLConn);
+            //command.ExecuteNonQuery();
 
             Values.Clear();
 
             //Add annual sum data
-            iString = new StringBuilder();
+            //iString = new StringBuilder();
             iString.Append(InsertString.Replace("[TABLE]", "ANNUALDATA").Replace("[INDICIES]", "SimId,Year"));
 
             for (int i = 0; i < AnnualSumValues.Count; i++)
             {
-                iString.Append((i == 0 ? "" : ",") + "(" + String.Join(",", AnnualSumValues[i]) + ")");
+                iString.Append((i == 0 ? "" : ",") + "(" + String.Join(",", AnnualSumValues[i].Select(v => Math.Round(v, 5))) + ")");
             }
 
-            command = new SQLiteCommand(iString.ToString(), SQLConn);
-            command.ExecuteNonQuery();
+            iString.Append(";");
+
+            //command = new SQLiteCommand(iString.ToString(), SQLConn);
+            //command.ExecuteNonQuery();
 
             AnnualSumValues.Clear();
 
             //Add annual average data
-            iString = new StringBuilder();
+            //iString = new StringBuilder();
             iString.Append(InsertString.Replace("[TABLE]", "ANNUALAVERAGEDATA").Replace("[INDICIES]", "SimId"));
 
-            iString.Append("(" + String.Join(",", AnnualAverageValues) + ")");
+            iString.Append("(" + String.Join(",", AnnualAverageValues.Select(v => Math.Round(v, 5))) + ")");
 
-            command = new SQLiteCommand(iString.ToString(), SQLConn);
-            command.ExecuteNonQuery();
+            iString.Append(";");
+
+            //command = new SQLiteCommand(iString.ToString(), SQLConn);
+            //command.ExecuteNonQuery();
 
             AnnualAverageValues.Clear();
 
@@ -140,11 +149,14 @@ namespace HowLeaky.ModelControllers.Outputs
                 Sim.Index.ToString() + ",\"" + Sim.Name + "\",\"" + Sim.StartDate.ToLongDateString() +
                 "\",\"" + Sim.EndDate.ToLongDateString() + "\")";
 
-            command = new SQLiteCommand(sql, SQLConn);
-            command.ExecuteNonQuery();
+            iString.Append(sql);
+            iString.Append(";");
+
+            //command = new SQLiteCommand(sql, SQLConn);
+            //command.ExecuteNonQuery();
 
             //Models
-            iString = new StringBuilder();
+            //iString = new StringBuilder();
             iString.Append("INSERT INTO MODELS (SimID, Name, InputType, LongName) VALUES ");
             foreach (InputModel im in Sim.InputModels)
             {
@@ -164,8 +176,25 @@ namespace HowLeaky.ModelControllers.Outputs
                 }
             }
 
-            command = new SQLiteCommand(iString.ToString(), SQLConn);
-            command.ExecuteNonQuery();
+            iString.Append(";");
+
+            // iString.AppendLine(" END;");
+            using (var cmd = new SQLiteCommand(SQLConn))
+            {
+                while (SQLConn.State == System.Data.ConnectionState.Executing)
+                {
+                    Thread.SpinWait(5);
+                }
+
+                using (var transaction = SQLConn.BeginTransaction())
+                {
+                    //SQLiteCommand command = new SQLiteCommand(iString.ToString(), SQLConn);
+                    cmd.CommandText = iString.ToString();
+                    cmd.ExecuteNonQuery();
+
+                    transaction.Commit();
+                }
+            }
 
         }
         /// <summary>

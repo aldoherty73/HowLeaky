@@ -11,8 +11,10 @@ using HowLeaky.Tools;
 using HowLeaky.Tools.Helpers;
 using System;
 using System.Collections.Generic;
+using System.Data.SQLite;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Xml;
 
 namespace HowLeaky
@@ -139,7 +141,7 @@ namespace HowLeaky
         {
             get
             {
-                return StartDate < EndDate? (EndDate - StartDate).Days + 1 : 0;
+                return StartDate < EndDate ? (EndDate - StartDate).Days + 1 : 0;
             }
         }
 
@@ -291,7 +293,7 @@ namespace HowLeaky
         /// <summary>
         /// 
         /// </summary>
-        void SetupOutput()
+        void SetupOutput(SQLiteConnection SQLConn = null)
         {
             if (Project.OutputType == OutputType.CSVOutput)
             {
@@ -299,7 +301,7 @@ namespace HowLeaky
             }
             else if (Project.OutputType == OutputType.SQLiteOutput)
             {
-                this.OutputModelController = new SQLiteOutputModelController(this, Project.SQLConn);
+                this.OutputModelController = new SQLiteOutputModelController(this, SQLConn == null ? Project.SQLConn : SQLConn);
 
                 //HLRDB.Simulation DBSim = new HLRDB.Simulation { Id = hlbw.Sim.Id, Name = hlbw.Sim.Name };
                 //DBSim.Data = new List<HLRDB.Data>();
@@ -325,9 +327,10 @@ namespace HowLeaky
         /// <summary>
         /// 
         /// </summary>
-        public void Run()
+        public void Run(SQLiteConnection SQLConn = null)
         {
-            SetupOutput();
+
+            SetupOutput(SQLConn);
 
             ResetToDefault();
 
@@ -352,13 +355,13 @@ namespace HowLeaky
             //Output all of the summary data
             //OutputModelController.WriteToFile(false);
 
-            OutputModelController.Finalise();
+            //OutputModelController.Finalise();
 
 
 
             //Do any necessary cleaup or output
 
-            //OutputModelController.Finalise();
+            OutputModelController.Finalise();
         }
 
         /// <summary>
