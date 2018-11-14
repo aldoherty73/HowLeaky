@@ -43,7 +43,7 @@ namespace HowLeaky.OutputModels
         {
             PropertyInfo = propertyInfo;
             Output = output;
-            this.Suffix = Suffix;
+            this.Suffix = suffix;
 
             //DBIndicies = new List<int>();
         }

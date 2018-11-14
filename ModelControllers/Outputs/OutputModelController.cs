@@ -209,7 +209,16 @@ namespace HowLeaky.ModelControllers
             {
                 if (v.IsSelected)
                 {
-                    propertyValues.Add(v.Value);
+                    //Test to trap
+                    if (Double.IsInfinity(v.Value))
+                    {
+                        propertyValues.Add(0);
+                    }
+                    else
+                    {
+                        propertyValues.Add(v.Value);
+                    }
+                    //propertyValues.Add(Double.IsInfinity(v.Value) ? 0: v.Value);
                 }
             }
             return propertyValues;
@@ -234,10 +243,10 @@ namespace HowLeaky.ModelControllers
             return AggregationTypes;
         }
 
-       /// <summary>
-       /// 
-       /// </summary>
-       /// <returns></returns>
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public List<AggregationSequenceEnum> GetAggregationSequenceTypes()
         {
             List<AggregationSequenceEnum> AggregationSequences = new List<AggregationSequenceEnum>();
@@ -282,6 +291,7 @@ namespace HowLeaky.ModelControllers
                         else
                         {
                             object value = v.PropertyInfo.GetValue(odm.HLController);
+
                             if (v.Output.Scale != 1)
                             {
                                 propertyValues.Add(((double)value * v.Output.Scale));
@@ -290,7 +300,7 @@ namespace HowLeaky.ModelControllers
                             {
                                 if (value.GetType() == typeof(double))
                                 {
-                                    propertyValues.Add((double)value);
+                                    propertyValues.Add(Double.IsInfinity((double)value) ? 0 : (double)value);
                                 }
                                 else
                                 {
@@ -308,21 +318,29 @@ namespace HowLeaky.ModelControllers
         /// </summary>
         /// <param name="Project"></param>
         /// <returns></returns>
-        public static List<OutputDataElement> GetProjectOutputs(List<HLController> controllers)
+        public static List<OutputDataElement> GetProjectOutputs(List<HLController> controllers, bool overrideCropSuffix = false)
         {
             List<OutputDataElement> Outputs = new List<OutputDataElement>();
 
-            foreach(HLController c in controllers)
+            foreach (HLController c in controllers)
             {
                 if (c != null)
                 {
                     if (c.GetType().BaseType == typeof(HLObjectController))
                     {
                         HLObjectController hlo = (HLObjectController)c;
-                        
-                        foreach(HLController child in hlo.ChildControllers)
+
+                        foreach (HLController child in hlo.ChildControllers)
                         {
-                            AddOutputElements(Outputs, child, true);
+                            if (hlo.GetType() == typeof(VegetationController) && overrideCropSuffix == true)
+                            {
+                                AddOutputElements(Outputs, child, false);
+
+                            }
+                            else
+                            {
+                                AddOutputElements(Outputs, child, true);
+                            }
                         }
                     }
                     else
@@ -331,7 +349,7 @@ namespace HowLeaky.ModelControllers
                     }
                 }
             }
-            
+
             return Outputs;
         }
 
