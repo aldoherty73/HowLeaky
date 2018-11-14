@@ -11,7 +11,7 @@ namespace HowLeaky.ModelControllers
 {
     public class HLObjectController : HLController
     {
-        public List<HLController> ChildControllers { get; set; }
+        public List<HLController> ChildControllers { get; set; } = new List<HLController>();
 
         public HLObjectController() : base() { }
 
