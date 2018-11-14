@@ -235,6 +235,7 @@ namespace HowLeaky
             BaseControllers.Add(new SoilController(null, new List<InputModel>() { InputDataModels.FirstOrDefault(x => x.GetType() == typeof(SoilInputModel)) }));
 
             //Optional Controllers/Models
+            BaseControllers.Add(new VegetationController(null, new List<InputModel>() { InputDataModels.Where(x => x.GetType().BaseType == (typeof(VegInputModel))).FirstOrDefault() }));
             BaseControllers.Add(FindInputModels(InputDataModels, typeof(IrrigationInputModel)) == null ? null : new IrrigationController(null, FindInputModels(InputDataModels, typeof(IrrigationInputModel))));
             BaseControllers.Add(FindInputModels(InputDataModels, typeof(TillageInputModel)) == null ? null : new TillageController(null, FindInputModels(InputDataModels, typeof(TillageInputModel))));
             BaseControllers.Add(FindInputModels(InputDataModels, typeof(PesticideInputModel)) == null ? null : new PesticideController(null, FindInputModels(InputDataModels, typeof(PesticideInputModel))));
@@ -244,18 +245,26 @@ namespace HowLeaky
             BaseControllers.Add(FindInputModels(InputDataModels, typeof(DINNitrateInputModel)) == null ? null : new DINNitrateController(null, FindInputModels(InputDataModels, typeof(DINNitrateInputModel))));
 
             BaseControllers.Add(FindInputModels(InputDataModels, typeof(SolutesInputModel)) == null ? null : new SolutesController(null, FindInputModels(InputDataModels, typeof(SolutesInputModel))));
-
+            BaseControllers.Add(new ClimateController(null));
             //Get a list of outputs
-            OutputDataElements = OutputModelController.GetProjectOutputs(BaseControllers);
+            OutputDataElements = OutputModelController.GetProjectOutputs(BaseControllers, true);
 
             //Trim the outputs down
             List<HowLeaky.OutputModels.OutputDataElement> currentElements = new List<OutputDataElement>();
+            //currentElements.Add(new ClimateController(null).GetOutputModels()[0].OutputDataElements.FirstOrDefault(e => e.Name == "Rain"));
+            currentElements.Add(OutputDataElements.FirstOrDefault(e => e.Name == "Rain"));
+            currentElements.Add(OutputDataElements.FirstOrDefault(e => e.Name == "CropEvapoTranspiration"));
+            currentElements.Add(OutputDataElements.FirstOrDefault(e => e.Name == "DeepDrainage"));
             currentElements.Add(OutputDataElements.FirstOrDefault(e => e.Name == "Runoff"));
             currentElements.Add(OutputDataElements.FirstOrDefault(e => e.Name == "HillSlopeErosion"));
             currentElements.Add(OutputDataElements.FirstOrDefault(e => e.Name == "ParticPExport"));
             currentElements.Add(OutputDataElements.FirstOrDefault(e => e.Name == "PhosExportDissolve"));
             currentElements.AddRange(OutputDataElements.Where(e => e.Name.Contains("PestLostInRunoffWater")));
             currentElements.AddRange(OutputDataElements.Where(e => e.Name.Contains("PestLostInRunoffSediment")));
+
+            //Nitrate
+            currentElements.AddRange(OutputDataElements.Where(e => e.Name.Contains("N03NRunoffLoad")));
+            currentElements.AddRange(OutputDataElements.Where(e => e.Name.Contains("DINDrainage")));
 
             OutputDataElements.Clear();
 
@@ -295,6 +304,7 @@ namespace HowLeaky
             //}
 
             //OutputDataElements = OutputModelController.GetProjectOutputs(this);
+
         }
         /// <summary>
         /// 
@@ -376,11 +386,11 @@ namespace HowLeaky
                 //Simulation sim = GetSimulationElement(null);
 
                 //if (sim != null)
-               // {
-                   // BackgroundWorkers[i].Sim = sim;
-                    // BackgroundWorkers[i].RunWorkerAsync(new List<object>(new object[] { xe, handler }));
-                    //BackgroundWorkers[i].RunWorkerAsync(new List<object>(new object[] { sim }));
-                    BackgroundWorkers[i].RunWorkerAsync();
+                // {
+                // BackgroundWorkers[i].Sim = sim;
+                // BackgroundWorkers[i].RunWorkerAsync(new List<object>(new object[] { xe, handler }));
+                //BackgroundWorkers[i].RunWorkerAsync(new List<object>(new object[] { sim }));
+                BackgroundWorkers[i].RunWorkerAsync();
 
                 //}
             }
@@ -421,7 +431,7 @@ namespace HowLeaky
             }
 
             OutputPath = OutputPath.Replace("\\", "/");
-            
+
             //if (SQLConn != null)// && SQLConn.State == System.Data.ConnectionState.Open)
             //{
             //    SQLConn.Close();
@@ -441,19 +451,19 @@ namespace HowLeaky
             //Will need to create tables
             //Data
             string sql = "create table data (SimId int, Day int," + String.Join(" double,", OutputDataElements.Where(j => j.IsSelected == true).Select(x => x.Name)) + " double)";
-           
+
             SQLiteCommand command = new SQLiteCommand(sql, Connection);
             command.ExecuteNonQuery();
 
             //Annual sum data
             sql = "create table annualdata (SimId int, Year int," + String.Join(" double,", OutputDataElements.Where(j => j.IsSelected == true).Select(x => x.Name)) + " double)";
-           
+
             command = new SQLiteCommand(sql, Connection);
             command.ExecuteNonQuery();
 
             //Annual sum average data
             sql = "create table annualaveragedata (SimId int," + String.Join(" double,", OutputDataElements.Where(j => j.IsSelected == true).Select(x => x.Name)) + " double)";
-          
+
             command = new SQLiteCommand(sql, Connection);
             command.ExecuteNonQuery();
 
@@ -533,24 +543,24 @@ namespace HowLeaky
         /// <returns></returns>
         public Simulation GetSimulationElement(Simulation doneSim)
         {
-            while(ThreadLocked)
+            while (ThreadLocked)
             {
                 Thread.SpinWait(50);
             }
 
             Simulation nextSim = null;
 
-            if(doneSim != null)
+            if (doneSim != null)
             {
                 Simulations.Remove(doneSim);
             }
- 
-            if(Simulations == null || Simulations.Count == 0)
+
+            if (Simulations == null || Simulations.Count == 0)
             {
                 ThreadLocked = true;
 
                 //Read the first Met Inputmodel
-                if(CurrentClimateInputModel != null)
+                if (CurrentClimateInputModel != null)
                 {
                     InputDataModels.Remove(CurrentClimateInputModel);
                     CurrentSimIndex = 1;
@@ -589,10 +599,10 @@ namespace HowLeaky
 
             if (Simulations.Count > 0)
             {
-                nextSim = Simulations.FirstOrDefault(s=>s.Index == CurrentSimIndex);
+                nextSim = Simulations.FirstOrDefault(s => s.Index == CurrentSimIndex);
                 CurrentSimIndex++;
             }
-            
+
             return nextSim;
         }
 
@@ -652,9 +662,16 @@ namespace HowLeaky
                     //((SQLiteOutputModelController)MySimulations.Last().OutputModelController).SQLConn = MySQLConn;
                 }
 
-                foreach(Simulation s in MySimulations)
+                foreach (Simulation s in MySimulations)
                 {
-                    s.Run(MySQLConn);
+                    try
+                    {
+                        s.Run(MySQLConn);
+                    }
+                    catch (Exception ex)
+                    {
+                        string message = ex.Message;
+                    }
                 }
 
                 MySQLConn.Close();
@@ -722,7 +739,7 @@ namespace HowLeaky
 
             //Update Progress
             //Console.Write("\r{0} % Done.", ((double)NoSimsComplete / Simulations.Count * 100).ToString("0.00"));
-            Console.Write("\r{0} % Done.", ((double) ClimateDataIndex/ ClimateDatalements.Count * 100).ToString("0.00"));
+            Console.Write("\r{0} % Done.", ((double)ClimateDataIndex / ClimateDatalements.Count * 100).ToString("0.00"));
 
 
             //if (NoSimsComplete > Simulations.Count)
@@ -735,7 +752,7 @@ namespace HowLeaky
                 Console.WriteLine(ts);
             }
 
-           // Simulation nextSim = GetSimulationElement(hlbw.Sim);
+            // Simulation nextSim = GetSimulationElement(hlbw.Sim);
 
             //if (nextSim == null)
             //{
@@ -743,12 +760,12 @@ namespace HowLeaky
             //}
             //else
             //{
-                // hlbw.Sim = nextSim;
-                //hlbw.RunWorkerAsync(new List<object>(new object[] { nextSim }));
-                if (ClimateDataIndex < ClimateDatalements.Count)
-                {
-                    hlbw.RunWorkerAsync();
-                }
+            // hlbw.Sim = nextSim;
+            //hlbw.RunWorkerAsync(new List<object>(new object[] { nextSim }));
+            if (ClimateDataIndex < ClimateDatalements.Count)
+            {
+                hlbw.RunWorkerAsync();
+            }
             //}
 
             //if (NoSimsComplete == Simulations.Count)
