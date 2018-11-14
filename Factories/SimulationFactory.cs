@@ -44,8 +44,8 @@ namespace HowLeaky.Factories
 
                         string modelDescription = model.GetType().Name;
 
-                        modelDescription += (":" + model.Name);
-
+                        //modelDescription += (":" + new FileInfo(model.FileName).Name.Split(new char[] { '.' }, StringSplitOptions.RemoveEmptyEntries)[0]);// model.Name);
+                        modelDescription += (":" + new FileInfo(model.FileName).Name);// model.Name)
                         //Check for child nodes
                         foreach (XElement childElement in element.Elements())
                         {
