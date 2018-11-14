@@ -35,12 +35,20 @@ namespace HowLeaky.ModelControllers
         /// </summary>
         /// <param name="sim"></param>
         /// <param name="inputModels"></param>
-        public ClimateController(Simulation sim, List<InputModel> inputModels) : base(sim)
+        public ClimateController(Simulation sim, List<InputModel> inputModels) : this(sim)
         {
             InputModel = (ClimateInputModel)inputModels[0];
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sim"></param>
+        /// <param name="inputModels"></param>
+        public ClimateController(Simulation sim) : base(sim)
+        { 
             InitOutputModel();
         }
-        
         /// <summary>
         /// 
         /// </summary>
