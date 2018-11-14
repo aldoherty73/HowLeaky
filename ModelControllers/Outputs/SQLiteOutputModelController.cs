@@ -178,22 +178,29 @@ namespace HowLeaky.ModelControllers.Outputs
 
             iString.Append(";");
 
-            // iString.AppendLine(" END;");
-            using (var cmd = new SQLiteCommand(SQLConn))
+            try
             {
-                while (SQLConn.State == System.Data.ConnectionState.Executing)
+                // iString.AppendLine(" END;");
+                using (var cmd = new SQLiteCommand(SQLConn))
                 {
-                    Thread.SpinWait(5);
-                }
+                    while (SQLConn.State == System.Data.ConnectionState.Executing)
+                    {
+                        Thread.SpinWait(5);
+                    }
 
-                using (var transaction = SQLConn.BeginTransaction())
-                {
-                    //SQLiteCommand command = new SQLiteCommand(iString.ToString(), SQLConn);
-                    cmd.CommandText = iString.ToString();
-                    cmd.ExecuteNonQuery();
+                    using (var transaction = SQLConn.BeginTransaction())
+                    {
+                        //SQLiteCommand command = new SQLiteCommand(iString.ToString(), SQLConn);
+                        cmd.CommandText = iString.ToString();
+                        cmd.ExecuteNonQuery();
 
-                    transaction.Commit();
+                        transaction.Commit();
+                    }
                 }
+            }
+            catch(Exception ex)
+            {
+                string message = ex.Message;
             }
 
         }
