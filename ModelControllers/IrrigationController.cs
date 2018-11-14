@@ -316,7 +316,7 @@ namespace HowLeaky.ModelControllers
                         {
                             case (int)TargetAmountOptions.FieldCapacity: return Sim.SoilController.SoilWaterDeficit;
                             case (int)TargetAmountOptions.Saturation: return Sim.SoilController.Satd;
-                            case (int)TargetAmountOptions.FixedAmount: return InputModel.FixedIrrigationAmount;
+                            case (int)TargetAmountOptions.FixedAmount: return InputModel.TargetAmountOptions.IrrigationAmount;
                             case (int)TargetAmountOptions.DULplus25Percent: return Sim.SoilController.SoilWaterDeficit + (Sim.SoilController.Satd - Sim.SoilController.SoilWaterDeficit) * 0.25;
                             case (int)TargetAmountOptions.DULplus50Percent: return Sim.SoilController.SoilWaterDeficit + (Sim.SoilController.Satd - Sim.SoilController.SoilWaterDeficit) * 0.50;
                             case (int)TargetAmountOptions.DULplus75Percent: return Sim.SoilController.SoilWaterDeficit + (Sim.SoilController.Satd - Sim.SoilController.SoilWaterDeficit) * 0.75;
