@@ -20,9 +20,11 @@ namespace HowLeaky.ModelControllers.Veg
         public CoverVegObjectController(Simulation simulation) : base(simulation)
         {
             PredefinedResidue = true;
-            VegetationController = simulation.VegetationController;
+            if (simulation != null)
+            {
+                VegetationController = simulation.VegetationController;
+            }
         }
-
         /// <summary>
         /// 
         /// </summary>
