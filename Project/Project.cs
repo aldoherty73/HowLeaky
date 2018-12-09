@@ -85,7 +85,7 @@ namespace HowLeaky
 
             //Check that the data models are OK
 
-            Write("d:/test.hlk");
+            //Write("d:/test.hlk");
 
             //Run the simulations
             //RunSimulations();
