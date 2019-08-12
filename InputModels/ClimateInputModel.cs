@@ -23,8 +23,8 @@ namespace HowLeaky.DataModels
         public float Latitude { get; set; }
 
         public float Longitude { get; set; }
-        public DateTime? EndDate { get; set; } = new DateTime(1900,1,1);
-        public DateTime? StartDate { get; set; } = new DateTime(1900, 1, 1);
+        public DateTime? EndDate { get; set; } = null;
+        public DateTime? StartDate { get; set; } = null;
 
         [XmlIgnore]
         public List<double> Rain { get; set; }

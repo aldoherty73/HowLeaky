@@ -120,6 +120,8 @@ namespace HowLeaky.DataModels
         public double MaxInfiltIntoCracks { get; set; }
         [Input("SedDelivRatio")]
         public double SedDelivRatio { get; set; }
+        [Input("OrganicCarbon", "%")]
+        public double OrganicCarbon { get; set; } = 1;
 
         ////public virtual ParameterModel CnReductionAtFullCover { get; set; }
         ////public virtual ParameterModel PAWC { get; set; }

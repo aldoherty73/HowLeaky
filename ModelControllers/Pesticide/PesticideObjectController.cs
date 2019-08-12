@@ -475,6 +475,11 @@ namespace HowLeaky.ModelControllers.Pesticide
                     infiltration = 0;
                 }
                 ConcSoilAfterLeach = PestSoilConc * Math.Exp(-infiltration / (denom));
+
+                if(Double.IsInfinity(ConcSoilAfterLeach) || Double.IsNegativeInfinity(ConcSoilAfterLeach))
+                {
+                    ConcSoilAfterLeach = 0;
+                }
             }
             else
             {
@@ -520,6 +525,11 @@ namespace HowLeaky.ModelControllers.Pesticide
                 PestLostInRunoffWater = PestWaterPhaseConc * Sim.SoilController.Runoff * 0.01;
                 PestLostInRunoffSediment = PestSedPhaseConc * Sim.SoilController.HillSlopeErosion * Sim.SoilController.InputModel.SedDelivRatio;// spreadsheet uses runoff instead of erosion*SelDelivRatio
                 TotalPestLostInRunoff = PestLostInRunoffWater + PestLostInRunoffSediment;
+
+                if(PestLostInRunoffSediment == double.NaN)
+                {
+                    int i = 0;
+                }
 
             }
             else

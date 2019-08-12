@@ -66,29 +66,43 @@ namespace HowLeaky.DataModels
         [XmlElement("nitrateDrainageRetention")]
         public double NitrateDrainageRetention { get; set; } = 0.05;
 
-        [Input("Mineralisation", "per annum")]
-        [XmlElement("mineralisation")]
-        public double Mineralisation { get; set; } = 60;
+        //[Input("Mineralisation", "per annum")]
+        //[XmlElement("mineralisation")]
+        //public double Mineralisation { get; set; } = 60;
 
-        [Input("Saturated water capacity")]
-        [XmlElement("volSat")]
-        public double VolSat { get; set; } = 300;
+        //[Input("Saturated water capacity")]
+        //[XmlElement("volSat")]
+        //public double VolSat { get; set; } = 300;
 
-        [Input("Nitrogen added per year")]
-        [XmlElement("nitrogenApplication")]
-        public double NitrogenApplication { get; set; } = 475;
+        //[Input("Nitrogen added per year")]
+        //[XmlElement("nitrogenApplication")]
+        //public double NitrogenApplication { get; set; } = 475;
 
-        [Input("Nitrogen Application Frequency", "days")]
-        [XmlElement("nitrogenFrequency")]
-        public double NitrogenFrequency { get; set; } = 14;
+        //[Input("Nitrogen Application Frequency", "days")]
+        //[XmlElement("nitrogenFrequency")]
+        //public double NitrogenFrequency { get; set; } = 14;
 
-        [Input("Soil Carbon")]
-        [XmlElement("soilCarbon")]
-        public double SoilCarbon { get; set; } = 475;
+        //[Input("Soil Carbon")]
+        //[XmlElement("soilCarbon")]
+        //public double SoilCarbon { get; set; } = 475;
 
+
+        //        0 -0.4	0.4 – 0.8	0.8 - 1.2	1.2 – 1.6	1.6 – 2.0	2.0 – 2.4
+        ////VL L   ML M   MH H
+        //Nitrogen contribution(kg/ha)
+        //0	10	20	30	40	50
+
+        //SLope 
         [Input("Initial Excess N", "kg/ha")]
         [XmlElement("initialExcessN")]
-        public double InitialExcessN { get; set; } = 20;
+        public double InitialExcessN { get; set; } = 50;
+        
+        //Cap
+        [Input("Nitogen contributioin per unit organic carbon", "kg/ha")]
+        public double CNSlope { get; set; } = 25;
+
+        [Input("Initial Excess N", "kg/ha")]
+        public double CNMax { get; set; } = 50;
 
         [Input("Main Stem Duration", "days")]
         [XmlElement("mainStemDuration")]

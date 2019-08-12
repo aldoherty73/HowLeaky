@@ -35,7 +35,7 @@ namespace HowLeaky.ModelControllers
         public double ExcessN { get; set; }
 
         [Output("Vol of sat", "%")]
-        public double VolSat { get; set; }
+        public double PropVolSat { get; set; }
 
         [Output("DIN Drainage", "")]
         public double DINDrainage { get; set; }
@@ -45,7 +45,7 @@ namespace HowLeaky.ModelControllers
         double YesterdaysRunoff = 0;
         StageType StageType;
 
-        public new DINNitrateInputModel InputModel { get; set; }
+        //public NitrateInputModel InputModel { get; set; }
 
         /// <summary>
         /// 
@@ -58,16 +58,21 @@ namespace HowLeaky.ModelControllers
             InitOutputModel();
         }
 
+        public override  InputModel GetInputModel()
+        {
+            return this.InputModel;
+        }
+
         /// <summary>
         /// 
         /// </summary>
         public override void Initialise()
         {
-            InputModel.Plant.CalcDaily();
-            InputModel.Ratoon.CalcDaily();
+            ((DINNitrateInputModel)InputModel).Plant.CalcDaily();
+            ((DINNitrateInputModel)InputModel).Ratoon.CalcDaily();
 
-            NApplication = InputModel.NitrogenApplication / 365 * InputModel.NitrogenFrequency;
-            ExcessN = InputModel.InitialExcessN;
+            //NApplication = InputModel.NitrogenApplication / 365 * InputModel.NitrogenFrequency;
+            ExcessN = ((DINNitrateInputModel)InputModel).InitialExcessN;
         }
 
         /// <summary>
@@ -75,7 +80,14 @@ namespace HowLeaky.ModelControllers
         /// </summary>
         public override void Simulate()
         {
+            base.Simulate();
+
             int das = Sim.VegetationController.CurrentCrop.DaysSincePlanting;
+
+            if(das == 1)
+            {
+                ExcessN = ((DINNitrateInputModel)InputModel).InitialExcessN;
+            }
 
             //Saturated
             Saturated = false;
@@ -93,7 +105,7 @@ namespace HowLeaky.ModelControllers
                 Denitrification = 0;
                 if (Saturated)
                 {
-                    Denitrification = InputModel.Denitrification * ExcessN;
+                    Denitrification = ((DINNitrateInputModel)InputModel).Denitrification * ExcessN;
                 }
             }
 
@@ -102,33 +114,38 @@ namespace HowLeaky.ModelControllers
             {
                 StageType = StageType.Fallow;
             }
-            else if (das > 0 && das < InputModel.MainStemDuration)
+            else if (das > 0 && das < ((DINNitrateInputModel)InputModel).MainStemDuration)
             {
                 StageType = StageType.Plant;
             }
-            else if (das > 0 && das > InputModel.MainStemDuration)
+            else if (das > 0 && das > ((DINNitrateInputModel)InputModel).MainStemDuration)
             {
                 StageType = StageType.Ratoon;
             }
 
             //Applied N
             NitrogenApplication = 0;
-            if (StageType != StageType.Fallow && (Sim.Today - Sim.StartDate).Days % (int)InputModel.NitrogenFrequency == 0)
+            //if (StageType != StageType.Fallow && (Sim.Today - Sim.StartDate).Days % (int)InputModel.NitrogenFrequency == 0)
+            //{
+            //    NitrogenApplication = NApplication;
+            //}
+            if(InputModel.DissolvedNinRunoff.FertilizerInputDateSequences.ContainsDate(Sim.Today))
             {
-                NitrogenApplication = NApplication;
+                NitrogenApplication = InputModel.DissolvedNinRunoff.FertilizerInputDateSequences.ValueAtDate(Sim.Today);
             }
 
             //Mineralisation
             Mineralisation = 0;
             if (StageType == StageType.Fallow)
             {
-                Mineralisation = InputModel.Mineralisation / 365;
+                //Mineralisation = InputModel.Mineralisation / 365;
+                Mineralisation = Math.Min(Sim.SoilController.InputModel.OrganicCarbon * ((DINNitrateInputModel)InputModel).CNSlope, ((DINNitrateInputModel)InputModel).CNMax) / 365;
             }
 
             //Crop use
             CropUseActual = 0;
-            CropUsePlant = (1 / (1 + (Math.Exp((das - InputModel.Plant.A) * (-InputModel.Plant.B))))) * InputModel.Plant.Daily;
-            CropUseRatoon = (1 / (1 + (Math.Exp((das - InputModel.Ratoon.A) * (-InputModel.Ratoon.B))))) * InputModel.Ratoon.Daily;
+            CropUsePlant = (1 / (1 + (Math.Exp((das - ((DINNitrateInputModel)InputModel).Plant.A) * (-((DINNitrateInputModel)InputModel).Plant.B))))) * ((DINNitrateInputModel)InputModel).Plant.Daily;
+            CropUseRatoon = (1 / (1 + (Math.Exp((das - ((DINNitrateInputModel)InputModel).Ratoon.A) * (-((DINNitrateInputModel)InputModel).Ratoon.B))))) * ((DINNitrateInputModel)InputModel).Ratoon.Daily;
 
             if (StageType == StageType.Plant)
             {
@@ -140,10 +157,10 @@ namespace HowLeaky.ModelControllers
             }
 
             //Vol of sat
-            VolSat = Sim.SoilController.DeepDrainage / InputModel.VolSat;
+            PropVolSat = Sim.SoilController.DeepDrainage / Sim.SoilController.VolSat;
 
             //DIN Drainage
-            DINDrainage = VolSat * ExcessN * InputModel.NitrateDrainageRetention;
+            DINDrainage = PropVolSat * ExcessN * ((DINNitrateInputModel)InputModel).NitrateDrainageRetention;
 
             YesterdaysRunoff = Sim.SoilController.Runoff;
         }

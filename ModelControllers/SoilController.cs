@@ -253,6 +253,23 @@ namespace HowLeaky.ModelControllers
         public List<double> Drainage { get; set; }
 
 
+        public double VolSat
+        {
+            get
+            {
+                double volSat = 0;
+
+                for (int i = 0; i < InputModel.HorizonCount; i++)
+                {
+                    volSat += InputModel.Saturation.Values[i] *
+                        (i > 0 ? InputModel.Depths.Values[i] - InputModel.Depths.Values[i - 1] : InputModel.Depths.Values[i]);
+                }
+
+                return volSat / 100;
+            }
+        }
+
+
         /// <summary>
         /// 
         /// </summary>

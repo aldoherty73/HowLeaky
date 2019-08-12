@@ -52,6 +52,11 @@ namespace HowLeaky.Tools.DataObjects
         /// <returns></returns>
         public double ValueAtDate(DateTime date)
         {
+            int index = Dates.IndexOf(date);
+            if(index >= 0)
+            {
+                return Values[index];
+            }
             return 0;
         }
         /// <summary>

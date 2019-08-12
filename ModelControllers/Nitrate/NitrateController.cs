@@ -114,7 +114,7 @@ namespace HowLeaky.ModelControllers
         /// <returns></returns>
         public override InputModel GetInputModel()
         {
-            return InputModel;
+            return this.InputModel;
         }
 
         /// <summary>
@@ -195,7 +195,7 @@ namespace HowLeaky.ModelControllers
             try
             {
                 double NLKgHa = GetN03NStoreTopLayerkgPerha();  //Nitrate load in surface layer (From Dairymod)
-                if (NLKgHa != MathTools.MISSING_DATA_VALUE)
+                if (!MathTools.DoublesAreEqual(NLKgHa , MathTools.MISSING_DATA_VALUE) && NLKgHa > 0)
                 {
                     double a = InputModel.DissolvedNinRunoff.N_DanRat_Alpha;
                     double b = -InputModel.DissolvedNinRunoff.N_DanRat_Beta;
@@ -230,13 +230,13 @@ namespace HowLeaky.ModelControllers
 
                     N03NStoreTopLayer = MathTools.MISSING_DATA_VALUE;
                     N03NDissolvedInRunoff = DINMgPerL;
-                    N03NRunoffLoad = MathTools.MISSING_DATA_VALUE;
+                    N03NRunoffLoad = N03NDissolvedInRunoff * Sim.SoilController.Runoff / 100 ;
                 }
                 else
                 {
                     N03NStoreTopLayer = MathTools.MISSING_DATA_VALUE;
                     N03NDissolvedInRunoff = MathTools.MISSING_DATA_VALUE;
-                    N03NRunoffLoad = MathTools.MISSING_DATA_VALUE;
+                    N03NRunoffLoad = 0.1 * Sim.SoilController.Runoff / 100;
                 }
             }
             catch (Exception ex)

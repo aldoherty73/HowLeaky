@@ -397,7 +397,7 @@ namespace HowLeaky
 
             if (HasOwnExecutableSpace)
             {
-                while (NoSimsComplete < Simulations.Count)
+                while (NoSimsComplete < SimulationElements.Count)
                 {
                     System.Threading.Thread.Sleep(500);
                 }
